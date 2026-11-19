@@ -1,0 +1,939 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>太阳系行星公转 - 高考真题</title>
+
+<link rel="stylesheet" href="./vendor/katex.min.css">
+<script defer src="./vendor/katex.min.js"></script>
+<script defer src="./vendor/auto-render.min.js"></script>
+
+<style>
+:root {
+  --btn-submit:    #4285F4;
+  --btn-start:     #34A853;
+  --btn-reset:     #EA4335;
+  --btn-action:    #F59E0B;
+
+  --c-blue:        #3B82F6;
+  --c-orange:      #F97316;
+  --c-red:         #EF4444;
+  --c-green:       #16A34A;
+
+  --sidebar-w:       380px;
+  --sidebar-pad-x:   20px;
+  --sidebar-pad-y:   20px;
+  --sidebar-gap:     12px;
+
+  --fs-body:     15px;
+  --lh-main:      1.6;
+
+  --display-bg:     #FFFFFF;
+  --display-border: 2px solid #E2E8F0;
+  --display-radius: 20px;
+
+  --bg-canvas:     #F0F7FF;
+  --bg-sidebar:    #FFFFFF;
+  --bg-input:      #F8FAFB;
+
+  --text-main:     #2C3E50;
+  --text-sub:      #7F8C8D;
+  --border-color:  #E2E8F0;
+
+  --font: "PingFang SC", "Microsoft YaHei", sans-serif;
+  --font-math: "STIX Two Math", "Times New Roman", monospace;
+}
+
+* { box-sizing: border-box; font-family: var(--font); -webkit-tap-highlight-color: transparent; margin: 0; padding: 0; }
+
+body {
+  width: 100vw; height: 100dvh;
+  background-color: var(--bg-canvas);
+  background-image: repeating-linear-gradient(0deg, transparent, transparent 19px, #e4e9f2 19px, #e4e9f2 20px);
+  display: flex; overflow: hidden;
+  user-select: none; -webkit-user-select: none;
+}
+
+#gt-sidebar {
+  width: var(--sidebar-w); flex-shrink: 0; background: var(--bg-sidebar); border-right: 3px solid #E2E8F0;
+  display: flex; flex-direction: column; padding: 0 var(--sidebar-pad-x) var(--sidebar-pad-y);
+  gap: var(--sidebar-gap); overflow-y: auto; overflow-x: hidden; z-index: 10;
+}
+#gt-sidebar::-webkit-scrollbar { width: 4px; }
+#gt-sidebar::-webkit-scrollbar-thumb { background: #D0DDE8; border-radius: 2px; }
+
+#gt-brand {
+  display: flex; align-items: center; gap: 8px; flex-shrink: 0; position: sticky; top: 0; z-index: 5;
+  background: var(--bg-sidebar); padding: var(--sidebar-pad-y) 0 12px; border-bottom: 1px solid var(--border-color);
+}
+#gt-brand img { height: 24px; width: auto; display: block; flex-shrink: 0; }
+.gt-brand-sep { width: 1.5px; height: 18px; background: #C8D8E8; flex-shrink: 0; }
+#gt-title { font-size: var(--fs-body); font-weight: 700; color: var(--text-main); flex: 1; white-space: nowrap; }
+
+/* 题干 */
+.gt-question {
+  background: #EBF4FF; border-radius: 12px; padding: 14px; border-left: 4px solid var(--btn-submit);
+  font-size: 14px; font-weight: 500; line-height: var(--lh-main); color: var(--text-main); text-align: justify;
+}
+.gt-question-label {
+  display: inline-block; background: #FA8C16; color: #fff; font-size: 12px; font-weight: bold; padding: 2px 8px; border-radius: 4px; margin-right: 6px; vertical-align: top;
+}
+.gt-question-source { font-size: 13px; color: #666; font-weight: bold; display: inline-block; }
+.gt-question-highlight { background: linear-gradient(transparent 55%, #FEF08A 55%); padding: 0 2px; }
+
+/* 选项 */
+.gt-opt-grid { display: grid; grid-template-columns: 1fr; gap: 6px; margin-top: 10px; }
+.gt-opt-item {
+  font-size: 13px; padding: 9px 12px; border-radius: 8px; font-weight: 600; text-align: left;
+  background: #FFFFFF; border: 1.5px solid #CBD5E1; transition: 0.2s; cursor: pointer; color: var(--text-main);
+}
+.gt-opt-item:hover { border-color: var(--btn-submit); background: #F0F7FF; }
+.gt-opt-item.active-wrong { background: #FDEDEC; border-color: var(--c-red); color: #C0392B; }
+.gt-opt-item.active-correct { background: #EAFAF1; border-color: var(--c-green); color: #1E8449; }
+
+/* 行星按钮 */
+.planet-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; }
+.planet-btn {
+  font-size: 11px; padding: 6px 4px; border-radius: 6px; font-weight: 600; text-align: center;
+  background: #FFFFFF; border: 1.5px solid #CBD5E1; transition: 0.2s; cursor: pointer; color: var(--text-main);
+}
+.planet-btn:hover { border-color: var(--btn-submit); background: #F0F7FF; }
+.planet-btn.active { background: linear-gradient(135deg, #4285F4, #2563EB); color: #fff; border-color: #2563EB; }
+
+/* 滑块 */
+.gt-input-group { display: flex; flex-direction: column; gap: 6px; }
+.sw-row { display: flex; align-items: center; justify-content: space-between; padding: 8px 12px; background: var(--bg-input); border-radius: 10px; }
+.sw-label { font-size: 13px; color: var(--text-sub); font-weight: 600; white-space: nowrap; min-width: 60px; }
+.sw-row input[type="range"] { flex: 1; margin: 0 10px; height: 4px; background: #E2E8F0; border-radius: 2px; outline: none; -webkit-appearance: none; }
+.sw-row input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; width: 16px; height: 16px; background: #F59E0B; border-radius: 50%; cursor: pointer; box-shadow: 0 2px 4px rgba(0,0,0,0.2); }
+.gt-num-tag { width: 78px; text-align: right; font-size: 12px; font-weight: 700; color: var(--text-main); font-family: var(--font-math); }
+
+/* 卡片 */
+.data-card { background: #F8FAFC; border-radius: 10px; padding: 10px 12px; border-left: 4px solid #ccc; display: flex; flex-direction: column; gap: 5px; box-shadow: 0 2px 6px rgba(0,0,0,0.03);}
+.card-blue { border-color: var(--c-blue); background: #EFF6FF; }
+.card-orange { border-color: var(--c-orange); background: #FFF7ED; }
+.card-yellow { border-color: #EAB308; background: #FEFCE8; position: relative; }
+.data-card .title { font-size: 13px; font-weight: bold; margin-bottom: 1px; }
+.card-blue .title { color: #1D4ED8; }
+.card-orange .title { color: #C2410C; }
+.card-yellow .title { color: #854D0E; }
+.data-row { display: flex; justify-content: space-between; font-size: 12px; color: #475569; gap: 6px;}
+.data-row .val { font-weight: 700; font-family: var(--font-math); text-align: right; }
+.trend-up   { color: var(--c-red); font-weight:bold; }
+.trend-down { color: var(--c-green); font-weight:bold; }
+.trend-eq   { color: #64748B; }
+.tip-line { font-size: 11px; color: #854D0E; line-height: 1.5; margin-top: 4px; padding-top: 4px; border-top: 1px dashed rgba(0,0,0,.1); }
+.kw { background: #FEF08A; padding: 0 4px; border-radius: 3px; font-weight: bold; color: #854D0E; }
+
+/* 按钮 */
+.gt-sidebar-sticky { position: sticky; bottom: 0; background: var(--bg-sidebar); padding-top: 8px; margin-top: auto; padding-bottom: var(--sidebar-pad-y); z-index: 10; display: flex; flex-direction: column; gap: 10px; }
+.gt-btn-row { display: flex; gap: 10px; }
+.gt-btn { display: flex; align-items: center; justify-content: center; flex: 1; height: 44px; border-radius: 10px; font-size: 14px; font-weight: 700; border: none; cursor: pointer; transition: 0.15s; color: #fff; }
+.gt-btn:active { transform: scale(0.96); }
+.gt-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+.gt-btn-play { background: var(--btn-start); box-shadow: 0 4px 12px rgba(52,168,83,.25); }
+.gt-btn-pause { background: var(--btn-submit); box-shadow: 0 4px 12px rgba(66,133,244,.25); }
+.gt-btn-action { background: var(--btn-action); box-shadow: 0 4px 12px rgba(245,158,11,.25); }
+.gt-btn-reset { background: var(--btn-reset); box-shadow: 0 4px 12px rgba(234,67,53,.25); }
+
+/* 右侧 */
+#gt-display { flex: 1; overflow: hidden; display: flex; flex-direction: column; padding: 24px; gap: 16px; position: relative; z-index: 5; }
+
+#gt-demo-area {
+  flex: 1; min-height: 0; position: relative;
+  background-color: var(--display-bg);
+  border-radius: var(--display-radius); border: var(--display-border);
+  box-shadow: 0 4px 20px rgba(0,0,0,0.04);
+  overflow: hidden;
+}
+
+.scene-wrap { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+  background: radial-gradient(ellipse at 18% 50%, #2A1206 0%, #0B0510 40%, #02040A 100%);
+}
+.scene { position: relative; width: 1000px; height: 800px; transform-origin: center center; flex: none; display: block; }
+.scene canvas { width: 100%; height: 100%; display: block; }
+
+.anim-overlay-text { position: absolute; top: 20px; left: 20px; font-size: 16px; font-weight: bold; color: #F8FAFC; background: rgba(30, 41, 59, 0.8); padding: 10px 20px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.2); z-index: 10; backdrop-filter: blur(4px);}
+.anim-overlay-formula { position: absolute; top: 20px; right: 20px; font-size: 13px; color: #F8FAFC; background: rgba(30, 41, 59, 0.8); padding: 10px 16px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.2); z-index: 10; backdrop-filter: blur(4px); font-family: var(--font-math); line-height: 1.7;}
+
+#toast { position: absolute; top: 80px; left: 50%; transform: translateX(-50%) translateY(-20px); background: rgba(22, 163, 74, 0.95); color: #fff; padding: 12px 24px; border-radius: 8px; font-size: 15px; font-weight: bold; opacity: 0; pointer-events: none; transition: 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); z-index: 100; box-shadow: 0 10px 25px rgba(0,0,0,0.2); white-space: nowrap;}
+#toast.show { opacity: 1; pointer-events: auto; transform: translateX(-50%) translateY(0); }
+#toast.error { background: rgba(220, 38, 38, 0.95); }
+
+#gt-result-area {
+  position: absolute; bottom: 24px; left: 24px; right: 24px;
+  opacity: 0; max-height: 0; padding: 0 28px; background: #FFFFFF; border-radius: var(--display-radius); border: 2px solid transparent; font-size: 15px; line-height: 1.6; color: var(--text-main); box-shadow: 0 -4px 30px rgba(0,0,0,0.1); z-index: 20; overflow: hidden; transition: all 0.5s cubic-bezier(0.23, 1, 0.32, 1);
+}
+#gt-result-area.show { opacity: 1; max-height: 500px; padding: 22px 28px; border-color: #1f212c; overflow-y: auto; }
+#gt-result-area::-webkit-scrollbar { width: 4px; }
+#gt-result-area::-webkit-scrollbar-thumb { background: #D0DDE8; border-radius: 2px; }
+
+.res-step { display: flex; align-items: flex-start; gap: 12px; margin-bottom: 12px; }
+.res-num { flex-shrink: 0; background: #26B679; color: #fff; width: 22px; height: 22px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: bold; margin-top: 2px; }
+.res-text { flex: 1; text-align: justify; font-size: 14px; }
+.res-ans-row { display: flex; align-items: flex-start; gap: 8px; margin-top: 12px; background: #FFF7ED; padding: 10px 14px; border-radius: 10px; border-left: 4px solid #F97316; }
+.res-ans-row-detail { background: #F8FAFC; border-left: 4px solid #3B82F6; margin-top: 6px;}
+.res-tag { font-weight: bold; flex-shrink: 0; display: flex; align-items: center; gap: 6px; font-size: 15px; }
+.res-tag-orange { color: #C2410C; }
+.res-tag-blue { color: #1D4ED8; }
+
+@media (max-width: 900px) {
+  #gt-sidebar { width: 320px; }
+  #gt-display { padding: 16px; }
+}
+</style>
+</head>
+<body>
+
+<aside id="gt-sidebar">
+  <div id="gt-brand">
+    <img src="./vendor/3713229400_a8q1wu0p.png" alt="高途">
+    <div class="gt-brand-sep"></div>
+    <div id="gt-title">太阳系行星公转模型</div>
+  </div>
+
+  <div class="gt-question" id="exam-question">
+    <div style="margin-bottom: 6px;">
+      <span class="gt-question-label">例</span>
+      <span class="gt-question-source">(北京·高考真题)</span>
+    </div>
+    如图所示，假设地球和火星都绕太阳做匀速圆周运动，<span class="gt-question-highlight">已知地球到太阳的距离小于火星到太阳的距离</span>，那么（&nbsp;&nbsp;&nbsp;&nbsp;）
+
+    <div class="gt-opt-grid">
+      <div class="gt-opt-item" data-opt="A">A. 地球公转的周期大于火星公转的周期</div>
+      <div class="gt-opt-item" data-opt="B">B. 地球公转的线速度小于火星公转的线速度</div>
+      <div class="gt-opt-item" data-opt="C">C. 地球公转的加速度小于火星公转的加速度</div>
+      <div class="gt-opt-item" data-opt="D">D. 地球公转的角速度大于火星公转的角速度</div>
+    </div>
+  </div>
+
+  <div class="data-card" style="background:#FFFBEB; border-left:4px solid #F59E0B;">
+    <div style="font-size:12px; font-weight:bold; color:#92400E;">⚡ 快速切换行星（视为绕日匀速圆周）</div>
+    <div class="planet-grid" id="planet-grid"></div>
+  </div>
+
+  <div class="gt-input-group">
+    <div class="sw-row">
+      <span class="sw-label">轨道半径 $r$</span>
+      <input type="range" id="r-slider" min="0.30" max="5.50" step="0.01" value="1.00">
+      <span id="v-r" class="gt-num-tag">1.00 AU</span>
+    </div>
+  </div>
+
+  <div class="data-card card-blue">
+    <div class="title">🪐 当前行星运动参数</div>
+    <div class="data-row"><span>所选行星</span><span class="val" id="d-name">地球（自定义）</span></div>
+    <div class="data-row"><span>$r$ 轨道半径</span><span class="val" id="d-r">1.00 AU</span></div>
+    <div class="data-row"><span>$v$ 线速度</span><span class="val"><span id="d-v">--</span> <span id="t-v" class="trend-eq">—</span></span></div>
+    <div class="data-row"><span>$\omega$ 角速度</span><span class="val"><span id="d-w">--</span> <span id="t-w" class="trend-eq">—</span></span></div>
+    <div class="data-row"><span>$a$ 向心加速度</span><span class="val"><span id="d-a">--</span> <span id="t-a" class="trend-eq">—</span></span></div>
+    <div class="data-row"><span>$T$ 公转周期</span><span class="val"><span id="d-T">--</span> <span id="t-T" class="trend-eq">—</span></span></div>
+  </div>
+
+  <div class="data-card card-orange">
+    <div class="title">⚖️ 地球 vs 火星 对比</div>
+    <div class="data-row"><span>地球 $r_E$</span><span class="val">1.00 AU</span></div>
+    <div class="data-row"><span>火星 $r_M$</span><span class="val">1.52 AU</span></div>
+    <div class="data-row"><span>$v_E:v_M$</span><span class="val" id="d-rv">--</span></div>
+    <div class="data-row"><span>$\omega_E:\omega_M$</span><span class="val" id="d-rw">--</span></div>
+    <div class="data-row"><span>$a_E:a_M$</span><span class="val" id="d-ra">--</span></div>
+    <div class="data-row"><span>$T_E:T_M$</span><span class="val" id="d-rT">--</span></div>
+  </div>
+
+  <div class="data-card card-yellow">
+    <div class="title">🔑 高轨低速大周期</div>
+    <div style="font-size:12px; font-family:var(--font-math); color:#92400E; font-weight:600;">
+      $r \uparrow \Rightarrow v \downarrow,\ \omega \downarrow,\ a \downarrow,\ T \uparrow$
+    </div>
+    <div class="tip-line">
+      ⚠ 适用前提：<span class="kw">同一中心天体</span>；且公转参数与<span class="kw">环绕行星自身质量 m 无关</span>
+    </div>
+  </div>
+
+  <div class="gt-sidebar-sticky">
+    <div class="gt-btn-row">
+      <button class="gt-btn gt-btn-play" id="btn-play">▶ 播放</button>
+      <button class="gt-btn gt-btn-pause" id="btn-pause">⏸ 暂停</button>
+    </div>
+    <div class="gt-btn-row">
+      <button class="gt-btn gt-btn-action" id="btn-show">📖 查看详解</button>
+      <button class="gt-btn gt-btn-reset" id="btn-reset">🔄 重置</button>
+    </div>
+  </div>
+</aside>
+
+<main id="gt-display">
+  <div id="gt-demo-area">
+    <div class="anim-overlay-text" id="angleOverlay">当前：地球 | r = 1.00 AU</div>
+    <div class="anim-overlay-formula">
+      $v=\sqrt{\dfrac{GM}{r}},\ \omega=\sqrt{\dfrac{GM}{r^3}},\ a=\dfrac{GM}{r^2},\ T=2\pi\sqrt{\dfrac{r^3}{GM}}$
+    </div>
+    <div style="position:absolute; left:20px; bottom:20px; font-size:12px; color:#CBD5E1; background:rgba(15,23,42,0.7); padding:8px 14px; border-radius:10px; border:1px solid rgba(255,255,255,0.15); z-index:10; backdrop-filter:blur(4px); line-height:1.6; pointer-events:none;">
+      🖱️ 拖动 = 旋转 &nbsp;|&nbsp; Shift+拖 / 右键拖 = 平移 &nbsp;|&nbsp; 滚轮 = 缩放
+    </div>
+    <div class="scene-wrap">
+      <div class="scene" id="scene">
+        <canvas id="animCanvas"></canvas>
+      </div>
+    </div>
+    <div id="toast"></div>
+    <div id="gt-result-area"></div>
+  </div>
+</main>
+
+<script>
+(function(){
+  'use strict';
+
+  // ============ Audio ============
+  let audioCtx = null;
+  function ensureAudio(){
+    if(!audioCtx){ try{ audioCtx = new (window.AudioContext||window.webkitAudioContext)(); }catch(e){ audioCtx=null; } }
+    if(audioCtx && audioCtx.state==='suspended') audioCtx.resume();
+  }
+  function blip(freq, dur, type, vol, delay){
+    if(!audioCtx) return;
+    const t = audioCtx.currentTime + (delay||0);
+    const o = audioCtx.createOscillator();
+    const g = audioCtx.createGain();
+    o.type = type||'sine';
+    o.frequency.setValueAtTime(freq, t);
+    g.gain.setValueAtTime(0, t);
+    g.gain.linearRampToValueAtTime(vol, t+0.005);
+    g.gain.exponentialRampToValueAtTime(0.001, t+dur);
+    o.connect(g).connect(audioCtx.destination);
+    o.start(t); o.stop(t+dur+0.02);
+  }
+  function playClick(){ blip(820, 0.06, 'square', 0.04); }
+  function playOK(){ blip(660, 0.1, 'sine', 0.07); blip(990, 0.12, 'sine', 0.08, 0.09); blip(1320, 0.18, 'sine', 0.06, 0.2); }
+  function playBad(){ blip(280, 0.12, 'sawtooth', 0.06); blip(180, 0.2, 'sawtooth', 0.06, 0.11); }
+  function playWhoosh(){ blip(220, 0.4, 'sine', 0.04); blip(440, 0.3, 'triangle', 0.04, 0.08); }
+  function playSwitch(){ blip(520, 0.06, 'triangle', 0.05); blip(780, 0.08, 'triangle', 0.05, 0.05); }
+
+  // ============ Planets ============
+  const PLANETS = [
+    { key:'mercury', name:'水星', r:0.39, color:'#A0826D', size:5  },
+    { key:'venus',   name:'金星', r:0.72, color:'#E8C5A0', size:8  },
+    { key:'earth',   name:'地球', r:1.00, color:'#4A90E2', size:8.5},
+    { key:'mars',    name:'火星', r:1.52, color:'#C1440E', size:6.5},
+    { key:'jupiter', name:'木星', r:5.20, color:'#D9A066', size:18 },
+    { key:'saturn',  name:'土星', r:9.55, color:'#E8C291', size:15 },
+    { key:'uranus',  name:'天王星',r:19.2,color:'#8FD3D7', size:12 },
+    { key:'neptune', name:'海王星',r:30.1,color:'#5B6FE0', size:12 }
+  ];
+
+  // ============ Elements ============
+  const rSlider = document.getElementById('r-slider');
+  const vR = document.getElementById('v-r');
+  const planetGrid = document.getElementById('planet-grid');
+
+  const resultArea = document.getElementById('gt-result-area');
+  const toastEl = document.getElementById('toast');
+  const angleOverlay = document.getElementById('angleOverlay');
+
+  const btnPlay = document.getElementById('btn-play');
+  const btnPause = document.getElementById('btn-pause');
+  const btnShow = document.getElementById('btn-show');
+  const btnReset = document.getElementById('btn-reset');
+  const demoArea = document.getElementById('gt-demo-area');
+  const scene = document.getElementById('scene');
+
+  const animCanvas = document.getElementById('animCanvas');
+  const animCtx = animCanvas.getContext('2d');
+  const LOGICAL_W = 1000, LOGICAL_H = 800;
+  animCanvas.width = LOGICAL_W*2; animCanvas.height = LOGICAL_H*2;
+  animCtx.scale(2,2);
+
+  // ============ Physics ============
+  const G_SI = 6.674e-11;
+  const M_SUN = 1.989e30;
+  const AU = 1.496e11;
+
+  // 3D 相机：用户可拖动旋转 / 滚轮缩放 / 右键或 Shift 拖动平移
+  const cam = {
+    pitch: 70 * Math.PI / 180,   // 俯仰：π/2 = 完全正俯视；0 = 平视（轨道塌成一条线）
+    yaw: 0,                      // 偏航：绕竖直轴旋转
+    zoom: 1.0,
+    panX: 0,
+    panY: 0,
+    // 拖动状态
+    dragging: false,
+    dragMode: null,              // 'rotate' | 'pan'
+    lastX: 0,
+    lastY: 0,
+    pinchDist: 0
+  };
+
+  // 把 3D 世界点 (X, Y, Z) 投到画布偏移 (sx, sy, depth)
+  // 约定：世界系 X 右、Y 上（垂直于黄道面）、Z 朝向观察者
+  // 顺序：先绕 Y 偏航 → 再绕 X 俯仰 → 正交投影
+  function project3D(X, Y, Z) {
+    const cy_y = Math.cos(cam.yaw),  sy_y = Math.sin(cam.yaw);
+    const x1 = X * cy_y - Z * sy_y;
+    const y1 = Y;
+    const z1 = X * sy_y + Z * cy_y;
+
+    const cp = Math.cos(cam.pitch), sp = Math.sin(cam.pitch);
+    const x2 = x1;
+    const y2 = y1 * cp + z1 * sp;
+    const z2 = -y1 * sp + z1 * cp;
+
+    return { sx: x2 * cam.zoom, sy: -y2 * cam.zoom, depth: z2 };
+  }
+
+  // 像素映射：sqrt 压缩，使内外行星都能装入画面
+  // r_AU=1 (地球) → 140 px；r_AU=5 (木星) → ~313 px；r_AU=30 (海王星) → ~767 px (太挤了，需压缩)
+  // 改用：log 映射保证可视化
+  function rToPx(r_AU){
+    // 让 0.3 AU → 60 px，1.0 → 150 px，1.52 → 200 px，5.2 → 320 px，30 → 470 px（采用 r^0.5 缩放后再细调）
+    return 140 * Math.pow(r_AU, 0.55);
+  }
+
+  const STAR_SEED = [];
+  (function(){
+    let s = 86420;
+    function rand(){ s=(s*9301+49297)%233280; return s/233280; }
+    for(let i=0;i<180;i++) STAR_SEED.push({x:rand()*LOGICAL_W, y:rand()*LOGICAL_H, r:0.4+rand()*1.4, a:0.25+rand()*0.55, tw:rand()*Math.PI*2});
+  })();
+
+  const state = {
+    r: 1.0,
+    active: 'earth',
+    angle: 0,
+    isPlaying: false,
+    selectedOpt: null,
+    tNow: 0,
+    // 每颗行星的独立公转角度（用于背景行星动起来）
+    planetAngles: {}
+  };
+  PLANETS.forEach((p, i) => { state.planetAngles[p.key] = i * 0.7; });
+
+  function calc(r_AU){
+    const r_si = r_AU * AU;
+    const v = Math.sqrt(G_SI * M_SUN / r_si);
+    const omega = Math.sqrt(G_SI * M_SUN / Math.pow(r_si, 3));
+    const a = G_SI * M_SUN / Math.pow(r_si, 2);
+    const T = 2 * Math.PI / omega;
+    return { v, omega, a, T };
+  }
+
+  // ============ Display ============
+  function fmtSci(x, digits){
+    if (x === 0) return '0';
+    const exp = Math.floor(Math.log10(Math.abs(x)));
+    const m = x / Math.pow(10, exp);
+    const sup = ['⁰','¹','²','³','⁴','⁵','⁶','⁷','⁸','⁹','⁻'];
+    function supStr(n){
+      const s = String(n); let out='';
+      for(const ch of s){ if(ch==='-') out+=sup[10]; else out+=sup[parseInt(ch)]; }
+      return out;
+    }
+    return `${m.toFixed(digits||2)}×10${supStr(exp)}`;
+  }
+  function fmtRatio(a, b){
+    const ratio = a/b;
+    return ratio.toFixed(3) + ' : 1';
+  }
+
+  let toastTimer = null;
+  function showToast(msg, type){
+    ensureAudio();
+    toastEl.innerHTML = msg;
+    toastEl.className = 'show ' + (type==='error'?'error':'');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(()=>{ toastEl.className=''; }, 3200);
+  }
+
+  // 渲染行星按钮
+  PLANETS.forEach(p => {
+    const btn = document.createElement('div');
+    btn.className = 'planet-btn' + (p.key==='earth'?' active':'');
+    btn.dataset.key = p.key;
+    btn.textContent = p.name;
+    btn.addEventListener('click', () => {
+      ensureAudio(); playSwitch();
+      state.active = p.key;
+      state.r = p.r;
+      rSlider.value = p.r.toFixed(2);
+      vR.innerText = p.r.toFixed(2) + ' AU';
+      document.querySelectorAll('.planet-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      updatePanel();
+      drawAnim();
+    });
+    planetGrid.appendChild(btn);
+  });
+
+  function getActivePlanet(){
+    return PLANETS.find(p => p.key === state.active) || PLANETS[2];
+  }
+
+  function trendArrow(curr, ref){
+    if (Math.abs(curr - ref) / ref < 1e-4) return { html:'—', cls:'trend-eq' };
+    if (curr > ref) return { html:'↑', cls:'trend-up' };
+    return { html:'↓', cls:'trend-down' };
+  }
+
+  function updatePanel(){
+    const cur = calc(state.r);
+    const earth = calc(1.0);
+
+    const planet = getActivePlanet();
+    const nameDisp = Math.abs(state.r - planet.r) < 0.02 ? planet.name : `自定义（参考 ${planet.name}）`;
+    document.getElementById('d-name').innerText = nameDisp;
+    document.getElementById('d-r').innerText = state.r.toFixed(2) + ' AU';
+    document.getElementById('d-v').innerText = (cur.v/1000).toFixed(2) + ' km/s';
+    document.getElementById('d-w').innerText = fmtSci(cur.omega, 2) + ' rad/s';
+    document.getElementById('d-a').innerText = fmtSci(cur.a, 2) + ' m/s²';
+    document.getElementById('d-T').innerText = (cur.T / (3600*24*365.25)).toFixed(3) + ' yr';
+
+    // 趋势（相对地球）
+    const tv = trendArrow(cur.v, earth.v);
+    const tw = trendArrow(cur.omega, earth.omega);
+    const ta = trendArrow(cur.a, earth.a);
+    const tT = trendArrow(cur.T, earth.T);
+    document.getElementById('t-v').innerHTML = tv.html; document.getElementById('t-v').className = tv.cls;
+    document.getElementById('t-w').innerHTML = tw.html; document.getElementById('t-w').className = tw.cls;
+    document.getElementById('t-a').innerHTML = ta.html; document.getElementById('t-a').className = ta.cls;
+    document.getElementById('t-T').innerHTML = tT.html; document.getElementById('t-T').className = tT.cls;
+
+    // 地球 vs 火星
+    const mars = calc(1.52);
+    document.getElementById('d-rv').innerHTML = `${fmtRatio(earth.v, mars.v)}  <span class="trend-up">↑</span>`;
+    document.getElementById('d-rw').innerHTML = `${fmtRatio(earth.omega, mars.omega)}  <span class="trend-up">↑</span>`;
+    document.getElementById('d-ra').innerHTML = `${fmtRatio(earth.a, mars.a)}  <span class="trend-up">↑</span>`;
+    document.getElementById('d-rT').innerHTML = `${fmtRatio(earth.T, mars.T)}  <span class="trend-down">↓</span>`;
+  }
+
+  rSlider.addEventListener('input', () => {
+    state.r = parseFloat(rSlider.value);
+    vR.innerText = state.r.toFixed(2) + ' AU';
+    // 找最接近的行星作为视觉对照
+    let best = null, bestDist = Infinity;
+    PLANETS.forEach(p => { const d = Math.abs(p.r - state.r); if(d<bestDist){bestDist=d; best=p;} });
+    if (best) state.active = best.key;
+    document.querySelectorAll('.planet-btn').forEach(b => { b.classList.toggle('active', b.dataset.key === state.active); });
+    updatePanel();
+    drawAnim();
+  });
+
+  // ============ Rendering ============
+  function drawArrow(ctx, fromX, fromY, toX, toY, color, w){
+    const headlen = 10;
+    const a = Math.atan2(toY-fromY, toX-fromX);
+    ctx.beginPath(); ctx.moveTo(fromX, fromY); ctx.lineTo(toX, toY);
+    ctx.strokeStyle = color; ctx.lineWidth = w||2.5; ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(toX, toY);
+    ctx.lineTo(toX - headlen*Math.cos(a-Math.PI/6), toY - headlen*Math.sin(a-Math.PI/6));
+    ctx.lineTo(toX - headlen*Math.cos(a+Math.PI/6), toY - headlen*Math.sin(a+Math.PI/6));
+    ctx.fillStyle = color; ctx.fill();
+  }
+
+  function drawAnim(){
+    const ctx = animCtx;
+    ctx.clearRect(0, 0, LOGICAL_W, LOGICAL_H);
+
+    // 星空
+    state.tNow += 1;
+    for (const st of STAR_SEED){
+      const tw = 0.6 + 0.4 * Math.sin(st.tw + state.tNow * 0.02);
+      ctx.beginPath(); ctx.arc(st.x, st.y, st.r, 0, Math.PI*2);
+      ctx.fillStyle = `rgba(220,230,255,${st.a * tw})`; ctx.fill();
+    }
+
+    // 太阳放中心；用户可通过 panX/panY 拖动整体偏移
+    const cx0 = LOGICAL_W / 2 + cam.panX;
+    const cy0 = LOGICAL_H / 2 + cam.panY;
+
+    // 投影助手：返回画布像素坐标
+    function P(X, Y, Z) {
+      const p = project3D(X, Y, Z);
+      return { x: cx0 + p.sx, y: cy0 + p.sy, depth: p.depth };
+    }
+
+    // 收集所有要画的对象（按 depth 排序，实现远近遮挡）
+    const drawables = [];
+
+    // ----- 太阳（在世界原点） -----
+    const sunCenter = P(0, 0, 0);
+    drawables.push({
+      depth: 1e9,        // 最先画（被任何东西遮挡）
+      kind: 'sun',
+      pos: sunCenter
+    });
+
+    // ----- 8 颗行星 + 轨道 -----
+    PLANETS.forEach(p => {
+      const rPx = rToPx(p.r);
+      const isActive = p.key === state.active;
+
+      // 轨道描线：参数化 N 个点，全部投影
+      const N = 96;
+      const orbitPts = [];
+      for (let i = 0; i <= N; i++) {
+        const t = (i / N) * Math.PI * 2;
+        const X = rPx * Math.cos(t);
+        const Z = rPx * Math.sin(t);
+        orbitPts.push(P(X, 0, Z));
+      }
+      drawables.push({ depth: 0.5e9, kind: 'orbit', pts: orbitPts, isActive });  // 轨道画在太阳之上、行星之下
+
+      // 行星
+      const ang = state.planetAngles[p.key];
+      const X = rPx * Math.cos(ang);
+      const Z = rPx * Math.sin(ang);
+      const pp = P(X, 0, Z);
+      drawables.push({ depth: pp.depth, kind: 'planet', pos: pp, planet: p, isActive, sizeMul: Math.max(0.6, Math.min(1.6, cam.zoom)) });
+    });
+
+    // 自定义 r 轨道
+    const activeP = getActivePlanet();
+    let customOrbit = null;
+    if (Math.abs(activeP.r - state.r) > 0.02) {
+      const rPx = rToPx(state.r);
+      const N = 96;
+      const pts = [];
+      for (let i = 0; i <= N; i++) {
+        const t = (i / N) * Math.PI * 2;
+        pts.push(P(rPx * Math.cos(t), 0, rPx * Math.sin(t)));
+      }
+      // 半径数值标签点（取顶部）
+      const topLabelPt = P(rPx, 0, 0);
+      drawables.push({ depth: 0.45e9, kind: 'customOrbit', pts, label: `r=${state.r.toFixed(2)} AU`, labelPt: topLabelPt });
+    }
+
+    // 按 depth 从远到近排序（depth 大 = 远 = 先画）
+    drawables.sort((a, b) => b.depth - a.depth);
+
+    // 行星实际像素大小要 *zoom（让缩放更直观）
+    function planetRadius(p, sizeMul) { return p.size * sizeMul; }
+
+    // 渲染所有对象
+    for (const obj of drawables) {
+      if (obj.kind === 'sun') {
+        const c = obj.pos;
+        const sunR = 60 * cam.zoom;
+        // 光晕
+        for (let k=4; k>=1; k--){
+          const rOut = sunR + k*22*cam.zoom;
+          const grad = ctx.createRadialGradient(c.x, c.y, sunR, c.x, c.y, rOut);
+          grad.addColorStop(0, `rgba(255, 180, 80, ${0.15 - k*0.025})`);
+          grad.addColorStop(1, 'rgba(255, 180, 80, 0)');
+          ctx.beginPath(); ctx.arc(c.x, c.y, rOut, 0, Math.PI*2);
+          ctx.fillStyle = grad; ctx.fill();
+        }
+        // 本体
+        const sunGrad = ctx.createRadialGradient(c.x - sunR*0.3, c.y - sunR*0.3, sunR*0.1, c.x, c.y, sunR);
+        sunGrad.addColorStop(0, '#FFF6B5');
+        sunGrad.addColorStop(0.4, '#FCB54B');
+        sunGrad.addColorStop(0.8, '#E0530F');
+        sunGrad.addColorStop(1, '#6B1F00');
+        ctx.beginPath(); ctx.arc(c.x, c.y, sunR, 0, Math.PI*2);
+        ctx.fillStyle = sunGrad; ctx.fill();
+        ctx.fillStyle = '#FFF';
+        ctx.font = `bold ${Math.round(18 * Math.min(1.3, cam.zoom))}px PingFang SC, Microsoft YaHei, sans-serif`;
+        ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+        ctx.fillText('太阳', c.x, c.y);
+      }
+      else if (obj.kind === 'orbit') {
+        ctx.beginPath();
+        for (let i = 0; i < obj.pts.length; i++) {
+          const pt = obj.pts[i];
+          if (i === 0) ctx.moveTo(pt.x, pt.y);
+          else ctx.lineTo(pt.x, pt.y);
+        }
+        ctx.setLineDash(obj.isActive ? [] : [6, 7]);
+        ctx.lineWidth = obj.isActive ? 2 : 1.2;
+        ctx.strokeStyle = obj.isActive ? 'rgba(255,236,170,0.85)' : 'rgba(180,200,230,0.4)';
+        ctx.stroke();
+        ctx.setLineDash([]);
+      }
+      else if (obj.kind === 'customOrbit') {
+        ctx.beginPath();
+        for (let i = 0; i < obj.pts.length; i++) {
+          const pt = obj.pts[i];
+          if (i === 0) ctx.moveTo(pt.x, pt.y);
+          else ctx.lineTo(pt.x, pt.y);
+        }
+        ctx.setLineDash([4, 6]);
+        ctx.lineWidth = 1.5;
+        ctx.strokeStyle = '#F87171';
+        ctx.stroke();
+        ctx.setLineDash([]);
+        ctx.fillStyle = '#F87171';
+        ctx.font = 'italic bold 18px "Times New Roman", serif';
+        ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
+        ctx.fillText(obj.label, obj.labelPt.x + 8, obj.labelPt.y - 10);
+      }
+      else if (obj.kind === 'planet') {
+        const c = obj.pos;
+        const p = obj.planet;
+        const psz = planetRadius(p, obj.sizeMul);
+        const pGrad = ctx.createRadialGradient(c.x - psz*0.35, c.y - psz*0.35, psz*0.1, c.x, c.y, psz);
+        pGrad.addColorStop(0, '#FFFFFF');
+        pGrad.addColorStop(0.4, p.color);
+        pGrad.addColorStop(1, '#0F172A');
+        ctx.beginPath(); ctx.arc(c.x, c.y, psz, 0, Math.PI*2);
+        ctx.fillStyle = pGrad; ctx.fill();
+        if (obj.isActive){
+          ctx.beginPath(); ctx.arc(c.x, c.y, psz + 4, 0, Math.PI*2);
+          ctx.strokeStyle = '#FCD34D'; ctx.lineWidth = 2;
+          ctx.stroke();
+        }
+        ctx.fillStyle = obj.isActive ? '#FEF3C7' : 'rgba(226,232,240,0.75)';
+        ctx.font = obj.isActive ? 'bold 14px PingFang SC, Microsoft YaHei, sans-serif' : '12px PingFang SC, Microsoft YaHei, sans-serif';
+        ctx.textAlign = 'center'; ctx.textBaseline = 'top';
+        ctx.fillText(p.name, c.x, c.y - psz - 18);
+
+        // 给选中行星 + 选项激活时的额外高亮圈
+        if (state.selectedOpt && (p.key === 'earth' || p.key === 'mars')) {
+          ctx.strokeStyle = p.key === 'earth' ? '#3B82F6' : '#EF4444';
+          ctx.lineWidth = 2.5;
+          ctx.beginPath(); ctx.arc(c.x, c.y, psz + 8, 0, Math.PI*2); ctx.stroke();
+        }
+      }
+    }
+
+    // overlay
+    angleOverlay.textContent = `当前：${activeP.name} | r = ${state.r.toFixed(2)} AU | ${state.isPlaying?'公转中':'暂停'}`;
+  }
+
+  // ============ Loop ============
+  let rafId = null, lastTime = 0;
+  function loop(ts){
+    if(!lastTime) lastTime = ts;
+    const dt = (ts - lastTime) / 1000;
+    lastTime = ts;
+    if (state.isPlaying){
+      // 每颗行星按自己 ω ∝ r^(-1.5) 公转
+      PLANETS.forEach(p => {
+        const visualOmega = 0.9 / Math.pow(p.r, 1.5);  // 地球 → 0.9 rad/s 视觉
+        state.planetAngles[p.key] += visualOmega * dt;
+        if (state.planetAngles[p.key] > Math.PI*2) state.planetAngles[p.key] -= Math.PI*2;
+      });
+    }
+    drawAnim();
+    rafId = requestAnimationFrame(loop);
+  }
+  function setStatus(s){
+    const playing = s === 'playing';
+    btnPlay.disabled = playing;
+    btnPause.disabled = !playing;
+    if(!playing && rafId){ cancelAnimationFrame(rafId); rafId = null; }
+  }
+
+  // ============ Events ============
+  btnPlay.addEventListener('click', () => {
+    ensureAudio(); playClick();
+    state.isPlaying = true; setStatus('playing');
+    lastTime = 0; rafId = requestAnimationFrame(loop);
+  });
+  btnPause.addEventListener('click', () => {
+    ensureAudio(); playClick();
+    state.isPlaying = false; setStatus('paused');
+  });
+  btnReset.addEventListener('click', () => {
+    ensureAudio(); playClick();
+    state.r = 1.0; state.active = 'earth'; state.selectedOpt = null;
+    rSlider.value = '1.00'; vR.innerText = '1.00 AU';
+    PLANETS.forEach((p, i) => { state.planetAngles[p.key] = i * 0.7; });
+    document.querySelectorAll('.planet-btn').forEach(b => b.classList.toggle('active', b.dataset.key === 'earth'));
+    document.querySelectorAll('.gt-opt-item').forEach(el => el.className = 'gt-opt-item');
+    resultArea.classList.remove('show');
+    updatePanel();
+    state.isPlaying = false; setStatus('paused');
+    drawAnim();
+  });
+
+  // 选项判定
+  const OPT_VERDICT = {
+    A: { ok:false, msg:'地球 r 更小 → T 更小，与"大于火星周期"相反' },
+    B: { ok:false, msg:'地球 r 更小 → v 更大，与"小于火星线速度"相反' },
+    C: { ok:false, msg:'地球 r 更小 → a 更大，与"小于火星加速度"相反' },
+    D: { ok:true,  msg:'地球 r 更小 → ω 更大，正确 ✓' }
+  };
+
+  document.querySelectorAll('.gt-opt-item').forEach(opt => {
+    opt.addEventListener('click', () => {
+      ensureAudio();
+      document.querySelectorAll('.gt-opt-item').forEach(el => el.className = 'gt-opt-item');
+      const val = opt.dataset.opt;
+      state.selectedOpt = val;
+      const v = OPT_VERDICT[val];
+      if (v.ok){
+        opt.classList.add('active-correct'); playOK();
+        showToast(`✓ ${val}：${v.msg}`);
+        state.isPlaying = true; setStatus('playing');
+        lastTime = 0; if(!rafId) rafId = requestAnimationFrame(loop);
+      } else {
+        opt.classList.add('active-wrong'); playBad();
+        showToast(`✗ ${val}：${v.msg}`, 'error');
+      }
+      drawAnim();
+    });
+  });
+
+  btnShow.addEventListener('click', () => {
+    ensureAudio(); playWhoosh();
+    resultArea.innerHTML = `
+      <div class="res-step">
+        <div class="res-num">1</div>
+        <div class="res-text">根据题目中的"已知地球到太阳的距离小于火星到太阳的距离"可以知道对于<strong>同一个中心天体（太阳）</strong>，地球和火星的轨道高度不同，从而根据口诀判断出正确答案。</div>
+      </div>
+      <div class="res-ans-row">
+        <div class="res-tag res-tag-orange">答案：</div>
+        <div class="res-text">D</div>
+      </div>
+      <div class="res-ans-row res-ans-row-detail">
+        <div class="res-tag res-tag-blue">详解：</div>
+        <div class="res-text">
+          地球和火星都绕太阳做匀速圆周运动，所以满足口诀的适用条件，根据"<strong>高轨低速大周期</strong>"可知地球的线速度大小、加速度大小、角速度大小都大于火星，而地球的公转周期小于火星的公转周期，<strong>D 正确</strong>。
+          <br><br>
+          由 $G\\dfrac{Mm}{r^2}=m\\dfrac{v^2}{r}=m\\omega^2 r=ma=m\\dfrac{4\\pi^2 r}{T^2}$ 得：
+          <br>$v=\\sqrt{\\dfrac{GM}{r}}$、$\\omega=\\sqrt{\\dfrac{GM}{r^3}}$、$a=\\dfrac{GM}{r^2}$、$T=2\\pi\\sqrt{\\dfrac{r^3}{GM}}$。
+          <br>$r$ 增大 → $v、\\omega、a$ 全部减小，$T$ 增大；故 A、B、C 错误，D 正确。
+        </div>
+      </div>
+    `;
+    if (window.renderMathInElement) window.renderMathInElement(resultArea, { delimiters: [ {left:'$$',right:'$$',display:true}, {left:'$',right:'$',display:false} ] });
+    void resultArea.offsetWidth;
+    resultArea.classList.add('show');
+  });
+
+  // ============ Camera Drag / Zoom ============
+  function clampPitch() {
+    cam.pitch = Math.max(0.05, Math.min(Math.PI/2 - 0.001, cam.pitch));
+  }
+  function onPointerDown(e) {
+    if (e.target.closest('#gt-result-area') || e.target.closest('#toast')) return;
+    cam.dragging = true;
+    cam.dragMode = (e.shiftKey || e.button === 2) ? 'pan' : 'rotate';
+    cam.lastX = e.clientX;
+    cam.lastY = e.clientY;
+    demoArea.style.cursor = cam.dragMode === 'pan' ? 'move' : 'grabbing';
+    e.preventDefault();
+  }
+  function onPointerMove(e) {
+    if (!cam.dragging) return;
+    const dx = e.clientX - cam.lastX;
+    const dy = e.clientY - cam.lastY;
+    cam.lastX = e.clientX;
+    cam.lastY = e.clientY;
+    if (cam.dragMode === 'rotate') {
+      cam.yaw += dx * 0.008;
+      cam.pitch -= dy * 0.008;
+      clampPitch();
+    } else {
+      // 平移：抵消 fitScene 的缩放，让鼠标和视图同步
+      const w = demoArea.clientWidth || 1;
+      const scale = Math.min(w / LOGICAL_W, demoArea.clientHeight / LOGICAL_H) * 0.96;
+      cam.panX += dx / Math.max(scale, 0.1);
+      cam.panY += dy / Math.max(scale, 0.1);
+    }
+    drawAnim();
+  }
+  function onPointerUp() {
+    cam.dragging = false;
+    demoArea.style.cursor = 'grab';
+  }
+  function onWheel(e) {
+    e.preventDefault();
+    const factor = e.deltaY > 0 ? 0.92 : 1.08;
+    cam.zoom *= factor;
+    cam.zoom = Math.max(0.35, Math.min(3.5, cam.zoom));
+    drawAnim();
+  }
+  // 触屏：单指旋转 / 双指捏合缩放 / 双指拖动平移
+  function onTouchStart(e) {
+    if (e.touches.length === 1) {
+      cam.dragging = true; cam.dragMode = 'rotate';
+      cam.lastX = e.touches[0].clientX; cam.lastY = e.touches[0].clientY;
+    } else if (e.touches.length === 2) {
+      cam.dragging = true; cam.dragMode = 'pan';
+      const t1 = e.touches[0], t2 = e.touches[1];
+      cam.lastX = (t1.clientX + t2.clientX) / 2;
+      cam.lastY = (t1.clientY + t2.clientY) / 2;
+      cam.pinchDist = Math.hypot(t1.clientX - t2.clientX, t1.clientY - t2.clientY);
+    }
+    e.preventDefault();
+  }
+  function onTouchMove(e) {
+    if (!cam.dragging) return;
+    if (e.touches.length === 1 && cam.dragMode === 'rotate') {
+      const dx = e.touches[0].clientX - cam.lastX;
+      const dy = e.touches[0].clientY - cam.lastY;
+      cam.lastX = e.touches[0].clientX; cam.lastY = e.touches[0].clientY;
+      cam.yaw += dx * 0.008;
+      cam.pitch -= dy * 0.008;
+      clampPitch();
+      drawAnim();
+    } else if (e.touches.length === 2) {
+      const t1 = e.touches[0], t2 = e.touches[1];
+      const cxNow = (t1.clientX + t2.clientX) / 2;
+      const cyNow = (t1.clientY + t2.clientY) / 2;
+      const dist = Math.hypot(t1.clientX - t2.clientX, t1.clientY - t2.clientY);
+      const w = demoArea.clientWidth || 1;
+      const scale = Math.min(w / LOGICAL_W, demoArea.clientHeight / LOGICAL_H) * 0.96;
+      cam.panX += (cxNow - cam.lastX) / Math.max(scale, 0.1);
+      cam.panY += (cyNow - cam.lastY) / Math.max(scale, 0.1);
+      cam.lastX = cxNow; cam.lastY = cyNow;
+      if (cam.pinchDist > 0) {
+        cam.zoom *= dist / cam.pinchDist;
+        cam.zoom = Math.max(0.35, Math.min(3.5, cam.zoom));
+      }
+      cam.pinchDist = dist;
+      drawAnim();
+    }
+    e.preventDefault();
+  }
+  function onTouchEnd(e) {
+    if (e.touches.length === 0) cam.dragging = false;
+  }
+
+  demoArea.addEventListener('mousedown', onPointerDown);
+  window.addEventListener('mousemove', onPointerMove);
+  window.addEventListener('mouseup', onPointerUp);
+  demoArea.addEventListener('contextmenu', e => e.preventDefault());
+  demoArea.addEventListener('wheel', onWheel, { passive: false });
+  demoArea.addEventListener('touchstart', onTouchStart, { passive: false });
+  demoArea.addEventListener('touchmove', onTouchMove, { passive: false });
+  demoArea.addEventListener('touchend', onTouchEnd);
+  demoArea.style.cursor = 'grab';
+
+  // 重置时也复位相机
+  const origBtnReset = btnReset.onclick;
+  btnReset.addEventListener('click', () => {
+    cam.pitch = 70 * Math.PI / 180;
+    cam.yaw = 0;
+    cam.zoom = 1.0;
+    cam.panX = 0; cam.panY = 0;
+    drawAnim();
+  });
+
+  // ============ Layout ============
+  function fitScene(){
+    const w = demoArea.clientWidth; const h = demoArea.clientHeight;
+    if (w<=0 || h<=0) return;
+    const s = Math.max(w/LOGICAL_W, h/LOGICAL_H) * 0.96;
+    scene.style.transform = `scale(${s})`;
+  }
+  window.addEventListener('resize', fitScene);
+  window.addEventListener('orientationchange', fitScene);
+  if (window.ResizeObserver) new ResizeObserver(fitScene).observe(demoArea);
+
+  window.addEventListener('load', () => {
+    updatePanel();
+    fitScene();
+    setStatus('paused');
+    drawAnim();
+    if (window.renderMathInElement) {
+      window.renderMathInElement(document.body, { delimiters: [ {left:'$$',right:'$$',display:true}, {left:'$',right:'$',display:false} ] });
+    }
+  });
+
+  ['click','touchstart'].forEach(ev => window.addEventListener(ev, ensureAudio, { once:false, passive:true }));
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,11 @@
+“Bossa Antigua” by Kevin MacLeod (incompetech.com)
+ISRC: USUAN1700069. Released 2017. Original duration: 4:43.
+Licensed under Creative Commons Attribution 4.0 License
+https://creativecommons.org/licenses/by/4.0/
+Track details and attribution: https://incompetech.com/music/royalty-free/index.html?isrc=USUAN1700069
+Artist licensing page: https://incompetech.com/music/royalty-free/licenses/
+Source recording: https://incompetech.com/music/royalty-free/mp3-royaltyfree/Bossa%20Antigua.mp3
+Retrieved: 2026-11-18
+
+Official description: Jazz; Guitar, Bass, Drums; Bright, Grooving, Relaxed; 70 bpm.
+Portfolio adaptation: MP3 transcoding, gentle 65 Hz high-pass, gain reduced by 8 dB, peak limiting at amplitude 0.16, final 2-second fade-out. Browser playback retains a 2.4-second fade-in and looping. The recording itself is quiet on devices that ignore element.volume. No endorsement by the artist is implied.

@@ -1,0 +1,668 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>等边三角形手拉手模型</title>
+<style>
+:root {
+    --btn-submit: #4285F4;
+    --btn-start: #34A853;
+    --btn-hint: #FBBC05;
+    --btn-reset: #EA4335;
+    --btn-ghost-bg: #F0F4F8;
+
+    --sidebar-w: 320px;
+    --sidebar-pad-x: 24px;
+    --sidebar-pad-y: 24px;
+    --sidebar-gap: 16px;
+    --pad-x: 16px;
+    --pad-y: 16px;
+    --btn-h: 52px;
+    --btn-r: 14px;
+
+    --fs-title: 17px;
+    --fs-body: 15px;
+    --fs-caption: 13px;
+    --fs-data: 32px;
+    --fs-btn: 15px;
+    --lh-main: 1.6;
+
+    --display-bg: #F8FAFC;
+    --display-border: 2px solid #E2E8F0;
+    --display-radius: 20px;
+
+    --bg-canvas: #F0F7FF;
+    --bg-sidebar: #FFFFFF;
+    --bg-input: #F8FAFB;
+
+    --text-main: #2C3E50;
+    --text-sub: #7F8C8D;
+    --border: #E8EDF2;
+
+    /* 教具专用色 */
+    --color-OAB: #3B82F6;       /* △OAB 蓝 */
+    --color-OAB-fill: rgba(59,130,246,0.18);
+    --color-OCD: #F97316;       /* △OCD 橙 */
+    --color-OCD-fill: rgba(249,115,22,0.18);
+    --color-OAC: #EC4899;       /* △OAC 玫红 */
+    --color-OAC-fill: rgba(236,72,153,0.32);
+    --color-OBD: #14B8A6;       /* △OBD 青绿 */
+    --color-OBD-fill: rgba(20,184,166,0.32);
+    --color-AC: #DC2626;
+    --color-BD: #7C3AED;
+    --color-P: #DC2626;
+    --color-trail: #94A3B8;
+}
+
+@media (min-width: 1001px) and (max-width: 1400px) {
+    :root {
+        --sidebar-w: 280px; --sidebar-pad-x: 20px; --sidebar-pad-y: 20px;
+        --sidebar-gap: 12px;
+        --btn-h: 46px; --btn-r: 12px;
+        --fs-title: 15px; --fs-body: 14px; --fs-caption: 12px;
+        --fs-data: 28px; --fs-btn: 14px;
+    }
+}
+
+@media (max-width: 1000px) {
+    :root {
+        --sidebar-w: 200px; --sidebar-pad-x: 12px; --sidebar-pad-y: 14px;
+        --sidebar-gap: 8px;
+        --btn-h: 36px; --btn-r: 10px;
+        --fs-title: 12px; --fs-body: 11px; --fs-caption: 11px;
+        --fs-data: 20px; --fs-btn: 11px;
+    }
+}
+
+* { box-sizing: border-box; }
+html, body {
+    margin: 0; padding: 0;
+    width: 100vw;
+    height: 100vh;
+    height: 100dvh;
+    background: var(--bg-canvas);
+    color: var(--text-main);
+    overflow: hidden;
+    font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif;
+}
+
+#gt-main-area {
+    display: flex;
+    width: 100vw;
+    height: 100vh;
+    height: 100dvh;
+    overflow: hidden;
+}
+
+#gt-sidebar {
+    width: var(--sidebar-w);
+    flex-shrink: 0;
+    background: var(--bg-sidebar);
+    border-right: 3px solid #E2E8F0;
+    display: flex;
+    flex-direction: column;
+    padding: 0 var(--sidebar-pad-x) var(--sidebar-pad-y);
+    gap: var(--sidebar-gap);
+    overflow-y: auto;
+    overflow-x: hidden;
+}
+#gt-sidebar::-webkit-scrollbar { width: 4px; }
+#gt-sidebar::-webkit-scrollbar-thumb { background: #D0DDE8; border-radius: 2px; }
+#gt-sidebar > * { width: 100%; }
+
+#gt-brand {
+    display: flex; align-items: center; gap: 8px;
+    position: sticky; top: 0; z-index: 5;
+    background: var(--bg-sidebar);
+    padding: var(--sidebar-pad-y) 0 12px;
+}
+#gt-title {
+    font-size: var(--fs-body);
+    font-weight: 700; color: var(--text-main);
+}
+
+.gt-question {
+    background: #EBF4FF; border-radius: 12px; padding: 12px 14px;
+    border-left: 5px solid var(--btn-submit);
+    font-size: var(--fs-caption);
+    line-height: var(--lh-main); color: var(--text-main);
+}
+.gt-question-label {
+    font-size: var(--fs-caption); font-weight: 700; color: var(--btn-submit);
+    margin-bottom: 4px; letter-spacing: 0.5px;
+}
+
+.gt-slider-wrap { display: flex; flex-direction: column; gap: 6px; }
+.gt-slider-label {
+    display: flex; justify-content: space-between; align-items: center;
+    font-size: var(--fs-body); font-weight: 700;
+    color: var(--text-main);
+}
+.gt-slider-value {
+    font-size: calc(var(--fs-data) * 0.55); font-weight: 900;
+    color: var(--btn-submit); min-width: 48px; text-align: right;
+    font-variant-numeric: tabular-nums;
+}
+.gt-slider {
+    -webkit-appearance: none; appearance: none;
+    width: 100%; height: 22px;
+    background: transparent; outline: none; cursor: pointer;
+}
+.gt-slider::-webkit-slider-runnable-track {
+    width: 100%; height: 7px;
+    border-radius: 4px; background: #E2E8F0; cursor: pointer;
+}
+.gt-slider::-webkit-slider-thumb {
+    -webkit-appearance: none; appearance: none;
+    width: 22px; height: 22px; border-radius: 50%;
+    background: var(--btn-submit); cursor: pointer;
+    border: 3px solid #fff; box-shadow: 0 2px 6px rgba(66,133,244,0.35);
+    margin-top: -7.5px;
+}
+.gt-slider::-moz-range-track {
+    height: 7px; border-radius: 4px; background: #E2E8F0;
+}
+.gt-slider::-moz-range-thumb {
+    width: 22px; height: 22px; border-radius: 50%;
+    background: var(--btn-submit); border: 3px solid #fff;
+    box-shadow: 0 2px 6px rgba(66,133,244,0.35);
+}
+
+.gt-check-wrap {
+    display: flex; flex-direction: column; gap: 8px;
+    background: var(--bg-input); border-radius: 10px;
+    padding: 10px 12px; border: 1px solid var(--border);
+}
+.gt-check {
+    display: flex; align-items: center; gap: 8px;
+    font-size: var(--fs-caption); font-weight: 600;
+    color: var(--text-main); cursor: pointer;
+    user-select: none; -webkit-user-select: none;
+}
+.gt-check input {
+    width: 16px; height: 16px;
+    accent-color: var(--btn-submit);
+    cursor: pointer;
+    margin: 0; flex-shrink: 0;
+}
+.gt-check-tag {
+    display: inline-block; width: 10px; height: 10px;
+    border-radius: 2px; flex-shrink: 0;
+}
+
+.gt-sidebar-sticky {
+    position: sticky; bottom: 0;
+    background: var(--bg-sidebar);
+    padding-top: 8px; margin-top: auto;
+    display: flex; flex-direction: column; gap: 8px;
+}
+.gt-btn {
+    display: flex; align-items: center; justify-content: center; gap: 6px;
+    width: 100%; height: var(--btn-h);
+    border-radius: var(--btn-r);
+    font-size: var(--fs-btn); font-weight: 700;
+    border: none; cursor: pointer;
+    transition: filter 0.1s;
+    color: #fff;
+}
+.gt-btn:active { filter: brightness(0.88); }
+.gt-btn-reset  { background: var(--btn-reset); }
+.gt-btn-ghost  { background: var(--btn-ghost-bg); color: var(--text-main); }
+
+#gt-display {
+    flex: 1; overflow: hidden;
+    display: flex; flex-direction: column;
+    padding: var(--pad-y) var(--pad-x);
+    gap: 10px;
+    background: var(--bg-canvas);
+    min-width: 0;
+}
+
+#gt-demo-area {
+    position: relative; flex: 1;
+    background-image: radial-gradient(circle, rgba(180, 200, 220, 0.5) 1.5px, transparent 1.5px);
+    background-size: 20px 20px;
+    background-color: var(--display-bg);
+    border-radius: var(--display-radius);
+    border: var(--display-border);
+    overflow: hidden;
+    min-height: 0;
+}
+#main-canvas {
+    display: block;
+    width: 100%;
+    height: 100%;
+}
+
+#gt-conclusion {
+    flex-shrink: 0;
+    background: #FFFFFF;
+    border: 2px solid var(--border);
+    border-left: 5px solid var(--color-OAC);
+    border-radius: 14px;
+    padding: 12px 16px;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 8px 18px;
+    font-size: var(--fs-caption);
+    line-height: 1.5;
+    color: var(--text-main);
+}
+#gt-conclusion .conc-row {
+    display: flex; align-items: center; gap: 8px;
+}
+#gt-conclusion .conc-key {
+    display: inline-flex; align-items: center; gap: 4px;
+    font-weight: 700; color: #6366F1;
+    white-space: nowrap;
+}
+#gt-conclusion .conc-key::before {
+    content: ""; display: inline-block;
+    width: 8px; height: 8px; border-radius: 50%;
+    background: #6366F1;
+}
+#gt-conclusion .conc-val {
+    font-family: "Cambria Math", Cambria, Georgia, serif;
+    font-weight: 600; color: var(--text-main);
+    font-variant-numeric: tabular-nums;
+}
+
+@media (max-width: 1000px) {
+    #gt-conclusion { font-size: 11px; padding: 8px 10px; grid-template-columns: 1fr 1fr; gap: 4px 10px; }
+    .gt-question { padding: 8px 10px; }
+}
+</style>
+</head>
+<body>
+
+<div id="gt-main-area">
+    <aside id="gt-sidebar">
+        <div id="gt-brand">
+            <div id="gt-title">等边三角形手拉手模型</div>
+        </div>
+
+        <div class="gt-question">
+            <div class="gt-question-label">教学目标</div>
+            两个共顶点的等边三角形绕公共顶点旋转，观察△OAC ≌ △OBD 的全等关系，体会"旋转 → 全等"的核心思想。
+        </div>
+
+        <div class="gt-slider-wrap">
+            <div class="gt-slider-label">
+                <span>△OAB 边长 <i style="color:var(--color-OAB);">a</i></span>
+                <span class="gt-slider-value" id="val-a">5.0</span>
+            </div>
+            <input type="range" class="gt-slider" id="input-a" min="2" max="10" step="0.1" value="5">
+        </div>
+
+        <div class="gt-slider-wrap">
+            <div class="gt-slider-label">
+                <span>△OCD 边长 <i style="color:var(--color-OCD);">b</i></span>
+                <span class="gt-slider-value" id="val-b">7.0</span>
+            </div>
+            <input type="range" class="gt-slider" id="input-b" min="2" max="10" step="0.1" value="7">
+        </div>
+
+        <div class="gt-slider-wrap">
+            <div class="gt-slider-label">
+                <span>旋转角 β</span>
+                <span class="gt-slider-value" id="val-beta">60°</span>
+            </div>
+            <input type="range" class="gt-slider" id="input-beta" min="0" max="360" step="1" value="60">
+        </div>
+
+        <div class="gt-check-wrap">
+            <label class="gt-check">
+                <input type="checkbox" id="chk-cong" checked>
+                <span class="gt-check-tag" style="background:var(--color-OAC);"></span>
+                <span class="gt-check-tag" style="background:var(--color-OBD); margin-left:-4px;"></span>
+                <span>高亮全等 △OAC、△OBD</span>
+            </label>
+            <label class="gt-check">
+                <input type="checkbox" id="chk-bold" checked>
+                <span>加粗拉手线 AC、BD</span>
+            </label>
+            <label class="gt-check">
+                <input type="checkbox" id="chk-trail">
+                <span>显示旋转轨迹</span>
+            </label>
+        </div>
+
+        <div class="gt-sidebar-sticky">
+            <button id="btn-snap60" class="gt-btn gt-btn-ghost">β = 60°</button>
+            <button id="btn-reset" class="gt-btn gt-btn-reset">↺ 重置</button>
+        </div>
+    </aside>
+
+    <section id="gt-display">
+        <div id="gt-demo-area">
+            <canvas id="main-canvas"></canvas>
+        </div>
+
+        <div id="gt-conclusion">
+            <div class="conc-row">
+                <span class="conc-key">全等关系</span>
+                <span class="conc-val">△OAC ≅ △OBD（SAS）</span>
+            </div>
+            <div class="conc-row">
+                <span class="conc-key">对应边</span>
+                <span class="conc-val" id="conc-ac-bd">AC = BD = <b id="val-len">—</b></span>
+            </div>
+            <div class="conc-row">
+                <span class="conc-key">夹角不变</span>
+                <span class="conc-val">∠APB = <b id="val-angle">60°</b>（恒等于 60°）</span>
+            </div>
+            <div class="conc-row">
+                <span class="conc-key">旋转角</span>
+                <span class="conc-val">∠AOC = ∠BOD = <b id="val-rot">—</b></span>
+            </div>
+        </div>
+    </section>
+</div>
+
+<script>
+"use strict";
+
+const canvas = document.getElementById("main-canvas");
+const ctx = canvas.getContext("2d");
+
+const state = {
+    a: 5,
+    b: 7,
+    beta: 60,
+    showCong: true,
+    showBold: true,
+    showTrail: false,
+};
+
+let view = { ox: 0, oy: 0, scale: 28 };
+
+function resize() {
+    const dpr = window.devicePixelRatio || 1;
+    const rect = canvas.parentElement.getBoundingClientRect();
+    const w = Math.max(1, Math.floor(rect.width));
+    const h = Math.max(1, Math.floor(rect.height));
+    canvas.width = w * dpr;
+    canvas.height = h * dpr;
+    canvas.style.width = w + "px";
+    canvas.style.height = h + "px";
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+    view.ox = w * 0.45;
+    view.oy = h * 0.55;
+    const maxR = 14;
+    const fitX = (w - 80) / 2 / maxR;
+    const fitY = (h - 80) / 2 / maxR;
+    view.scale = Math.max(12, Math.min(fitX, fitY));
+    draw();
+}
+
+function toScreen(x, y) {
+    return { x: view.ox + x * view.scale, y: view.oy - y * view.scale };
+}
+
+function rotate(px, py, rad) {
+    const c = Math.cos(rad), s = Math.sin(rad);
+    return { x: px * c - py * s, y: px * s + py * c };
+}
+
+function geometry() {
+    const a = state.a, b = state.b;
+    const beta = state.beta * Math.PI / 180;
+    const sixty = Math.PI / 3;
+
+    const O = { x: 0, y: 0 };
+    const A = { x: a, y: 0 };
+    const B = { x: a * Math.cos(-sixty), y: a * Math.sin(-sixty) };
+    const C = { x: b * Math.cos(beta), y: b * Math.sin(beta) };
+    const D = { x: b * Math.cos(beta - sixty), y: b * Math.sin(beta - sixty) };
+
+    let P = null;
+    const denom = (A.x - C.x) * (B.y - D.y) - (A.y - C.y) * (B.x - D.x);
+    if (Math.abs(denom) > 1e-9) {
+        const t = ((A.x - B.x) * (B.y - D.y) - (A.y - B.y) * (B.x - D.x)) / denom;
+        P = { x: A.x + t * (C.x - A.x), y: A.y + t * (C.y - A.y) };
+    }
+
+    return { O, A, B, C, D, P };
+}
+
+function fillPoly(pts, fillStyle, strokeStyle, lineWidth) {
+    if (pts.length < 2) return;
+    ctx.beginPath();
+    const s0 = toScreen(pts[0].x, pts[0].y);
+    ctx.moveTo(s0.x, s0.y);
+    for (let i = 1; i < pts.length; i++) {
+        const s = toScreen(pts[i].x, pts[i].y);
+        ctx.lineTo(s.x, s.y);
+    }
+    ctx.closePath();
+    if (fillStyle) { ctx.fillStyle = fillStyle; ctx.fill(); }
+    if (strokeStyle) {
+        ctx.strokeStyle = strokeStyle;
+        ctx.lineWidth = lineWidth || 2;
+        ctx.lineJoin = "round";
+        ctx.stroke();
+    }
+}
+
+function drawLine(p1, p2, color, lw, dash) {
+    const s1 = toScreen(p1.x, p1.y);
+    const s2 = toScreen(p2.x, p2.y);
+    ctx.beginPath();
+    ctx.moveTo(s1.x, s1.y);
+    ctx.lineTo(s2.x, s2.y);
+    ctx.strokeStyle = color;
+    ctx.lineWidth = lw;
+    ctx.setLineDash(dash || []);
+    ctx.lineCap = "round";
+    ctx.stroke();
+    ctx.setLineDash([]);
+}
+
+function drawArc(cx, cy, r, color, dash) {
+    ctx.beginPath();
+    const c = toScreen(cx, cy);
+    ctx.arc(c.x, c.y, r * view.scale, 0, Math.PI * 2);
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 1.5;
+    ctx.setLineDash(dash || []);
+    ctx.stroke();
+    ctx.setLineDash([]);
+}
+
+function drawDot(p, color, r, ring) {
+    const s = toScreen(p.x, p.y);
+    if (ring) {
+        ctx.beginPath();
+        ctx.arc(s.x, s.y, r + 3, 0, Math.PI * 2);
+        ctx.fillStyle = "#fff";
+        ctx.fill();
+    }
+    ctx.beginPath();
+    ctx.arc(s.x, s.y, r, 0, Math.PI * 2);
+    ctx.fillStyle = color;
+    ctx.fill();
+}
+
+function drawLabel(p, text, color, ox, oy) {
+    const s = toScreen(p.x, p.y);
+    ctx.font = "700 17px -apple-system, BlinkMacSystemFont, 'PingFang SC', sans-serif";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.lineWidth = 4;
+    ctx.strokeStyle = "rgba(255,255,255,0.95)";
+    ctx.strokeText(text, s.x + ox, s.y + oy);
+    ctx.fillStyle = color;
+    ctx.fillText(text, s.x + ox, s.y + oy);
+}
+
+function drawAxes() {
+    const w = canvas.width / (window.devicePixelRatio || 1);
+    const h = canvas.height / (window.devicePixelRatio || 1);
+    ctx.strokeStyle = "rgba(120,140,170,0.25)";
+    ctx.lineWidth = 1;
+    ctx.setLineDash([4, 4]);
+    ctx.beginPath();
+    ctx.moveTo(0, view.oy); ctx.lineTo(w, view.oy);
+    ctx.moveTo(view.ox, 0); ctx.lineTo(view.ox, h);
+    ctx.stroke();
+    ctx.setLineDash([]);
+}
+
+function draw() {
+    const w = canvas.width / (window.devicePixelRatio || 1);
+    const h = canvas.height / (window.devicePixelRatio || 1);
+    ctx.clearRect(0, 0, w, h);
+
+    drawAxes();
+
+    const g = geometry();
+    const css = getComputedStyle(document.documentElement);
+    const cOAB = css.getPropertyValue("--color-OAB").trim();
+    const cOABf = css.getPropertyValue("--color-OAB-fill").trim();
+    const cOCD = css.getPropertyValue("--color-OCD").trim();
+    const cOCDf = css.getPropertyValue("--color-OCD-fill").trim();
+    const cOAC = css.getPropertyValue("--color-OAC").trim();
+    const cOACf = css.getPropertyValue("--color-OAC-fill").trim();
+    const cOBD = css.getPropertyValue("--color-OBD").trim();
+    const cOBDf = css.getPropertyValue("--color-OBD-fill").trim();
+    const cAC = css.getPropertyValue("--color-AC").trim();
+    const cBD = css.getPropertyValue("--color-BD").trim();
+    const cP = css.getPropertyValue("--color-P").trim();
+    const cTrail = css.getPropertyValue("--color-trail").trim();
+
+    if (state.showTrail) {
+        drawArc(0, 0, state.a, cTrail, [3, 4]);
+        drawArc(0, 0, state.b, cTrail, [3, 4]);
+    }
+
+    // 全等三角形高亮（画在底层，避免遮挡）
+    if (state.showCong) {
+        fillPoly([g.O, g.A, g.C], cOACf, cOAC, 2);
+        fillPoly([g.O, g.B, g.D], cOBDf, cOBD, 2);
+    }
+
+    // 两个原始等边三角形
+    fillPoly([g.O, g.A, g.B], cOABf, cOAB, 2.5);
+    fillPoly([g.O, g.C, g.D], cOCDf, cOCD, 2.5);
+
+    // 拉手线段
+    const lw = state.showBold ? 4 : 2;
+    drawLine(g.A, g.C, cAC, lw);
+    drawLine(g.B, g.D, cBD, lw);
+
+    // 顶点
+    drawDot(g.A, cOAB, 5, true);
+    drawDot(g.B, cOAB, 5, true);
+    drawDot(g.C, cOCD, 5, true);
+    drawDot(g.D, cOCD, 5, true);
+    drawDot(g.O, "#1F2937", 6, true);
+    if (g.P) drawDot(g.P, cP, 6, true);
+
+    // 标签：根据点相对 O 的方向偏移，避免重叠
+    function labelOffset(p, dist) {
+        const dx = p.x, dy = p.y;
+        const len = Math.hypot(dx, dy) || 1;
+        return { x: dx / len * dist, y: -dy / len * dist };
+    }
+    const offA = labelOffset(g.A, 18);
+    const offB = labelOffset(g.B, 18);
+    const offC = labelOffset(g.C, 18);
+    const offD = labelOffset(g.D, 18);
+    drawLabel(g.A, "A", cOAB, offA.x, offA.y);
+    drawLabel(g.B, "B", cOAB, offB.x, offB.y);
+    drawLabel(g.C, "C", cOCD, offC.x, offC.y);
+    drawLabel(g.D, "D", cOCD, offD.x, offD.y);
+    drawLabel(g.O, "O", "#1F2937", -14, -14);
+    if (g.P) drawLabel(g.P, "P", cP, 14, -14);
+
+    updateConclusion(g);
+}
+
+function updateConclusion(g) {
+    const ac = Math.hypot(g.A.x - g.C.x, g.A.y - g.C.y);
+    const bd = Math.hypot(g.B.x - g.D.x, g.B.y - g.D.y);
+    document.getElementById("val-len").textContent =
+        ((ac + bd) / 2).toFixed(2);
+    document.getElementById("val-rot").textContent =
+        state.beta.toFixed(0) + "°";
+
+    if (g.P) {
+        const v1x = g.C.x - g.A.x, v1y = g.C.y - g.A.y;
+        const v2x = g.D.x - g.B.x, v2y = g.D.y - g.B.y;
+        const dot = v1x * v2x + v1y * v2y;
+        const m = Math.hypot(v1x, v1y) * Math.hypot(v2x, v2y);
+        let ang = 0;
+        if (m > 1e-9) {
+            const cos = Math.max(-1, Math.min(1, dot / m));
+            ang = Math.acos(cos) * 180 / Math.PI;
+            if (ang > 90) ang = 180 - ang;
+        }
+        document.getElementById("val-angle").textContent = ang.toFixed(1) + "°";
+    } else {
+        document.getElementById("val-angle").textContent = "—";
+    }
+}
+
+function bindInput(id, key, fmt) {
+    const el = document.getElementById(id);
+    const out = document.getElementById("val-" + key);
+    el.addEventListener("input", () => {
+        state[key] = parseFloat(el.value);
+        out.textContent = fmt(state[key]);
+        draw();
+    });
+}
+
+bindInput("input-a", "a", v => v.toFixed(1));
+bindInput("input-b", "b", v => v.toFixed(1));
+bindInput("input-beta", "beta", v => v.toFixed(0) + "°");
+
+document.getElementById("chk-cong").addEventListener("change", e => {
+    state.showCong = e.target.checked; draw();
+});
+document.getElementById("chk-bold").addEventListener("change", e => {
+    state.showBold = e.target.checked; draw();
+});
+document.getElementById("chk-trail").addEventListener("change", e => {
+    state.showTrail = e.target.checked; draw();
+});
+
+document.getElementById("btn-snap60").addEventListener("click", () => {
+    const el = document.getElementById("input-beta");
+    const start = state.beta, end = 60;
+    const t0 = performance.now();
+    const dur = 400;
+    function step(t) {
+        const k = Math.min(1, (t - t0) / dur);
+        const ease = 1 - Math.pow(1 - k, 3);
+        state.beta = start + (end - start) * ease;
+        el.value = state.beta;
+        document.getElementById("val-beta").textContent = state.beta.toFixed(0) + "°";
+        draw();
+        if (k < 1) requestAnimationFrame(step);
+    }
+    requestAnimationFrame(step);
+});
+
+document.getElementById("btn-reset").addEventListener("click", () => {
+    state.a = 5; state.b = 7; state.beta = 60;
+    state.showCong = true; state.showBold = true; state.showTrail = false;
+    document.getElementById("input-a").value = 5;
+    document.getElementById("input-b").value = 7;
+    document.getElementById("input-beta").value = 60;
+    document.getElementById("chk-cong").checked = true;
+    document.getElementById("chk-bold").checked = true;
+    document.getElementById("chk-trail").checked = false;
+    document.getElementById("val-a").textContent = "5.0";
+    document.getElementById("val-b").textContent = "7.0";
+    document.getElementById("val-beta").textContent = "60°";
+    draw();
+});
+
+window.addEventListener("resize", resize);
+resize();
+</script>
+</body>
+</html>
